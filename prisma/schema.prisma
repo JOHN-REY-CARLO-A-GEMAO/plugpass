@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Extension {
+  id                String          @id @default(cuid())
+  chromeId          String          @unique
+  name              String
+  version           String
+  description       String
+  iconUrl           String?
+  storeUrl          String
+  privacyPolicyUrl  String?
+  developerId       String
+  developer         Developer       @relation(fields: [developerId], references: [id])
+  riskScore         Int             @default(0)
+  riskLevel         String          @default("unknown")
+  lastScanned       DateTime        @default(now())
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  permissions       Permission[]
+  dataPathways      DataPathway[]
+  alternatives      Alternative[]   @relation("PrimaryExtension")
+  alternativeOf     Alternative[]   @relation("AlternativeExtension")
+  @@index([riskScore])
+  @@index([developerId])
+}
+
+model Developer {
+  id                String          @id @default(cuid())
+  name              String
+  email             String?
+  website           String?
+  githubUrl         String?
+  linkedinUrl       String?
+  trustBadge        String          @default("none")
+  verificationLevel String          @default("unverified")
+  extensions        Extension[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  @@index([trustBadge])
+}
+
+model Permission {
+  id                String          @id @default(cuid())
+  extensionId       String
+  extension         Extension       @relation(fields: [extensionId], references: [id], onDelete: Cascade)
+  name              String
+  category          String
+  sensitivity       String
+  description       String?
+  @@index([extensionId])
+  @@index([sensitivity])
+}
+
+model DataPathway {
+  id                String          @id @default(cuid())
+  extensionId       String
+  extension         Extension       @relation(fields: [extensionId], references: [id], onDelete: Cascade)
+  apiEndpoint       String
+  dataType          String
+  direction         String
+  policyClaim       String?
+  actualBehavior    String?
+  policyDelta       Int             @default(0)
+  @@index([extensionId])
+}
+
+model Alternative {
+  id                String          @id @default(cuid())
+  primaryId         String
+  alternativeId     String
+  primary           Extension       @relation("PrimaryExtension", fields: [primaryId], references: [id], onDelete: Cascade)
+  alternative       Extension       @relation("AlternativeExtension", fields: [alternativeId], references: [id])
+  reason            String
+  permissionDelta   Int
+  @@unique([primaryId, alternativeId])
+  @@index([primaryId])
+}
