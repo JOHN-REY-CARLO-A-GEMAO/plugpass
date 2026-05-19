@@ -91,6 +91,11 @@ export default function ExtensionDetailPage({ params }: { params: Promise<{ id: 
     if (!id) return
     const fetchDetail = async () => {
       const res = await fetch(`/api/extensions/${id}`)
+      if (!res.ok) {
+        setExtension(null)
+        setLoading(false)
+        return
+      }
       const data = await res.json()
       setExtension(data)
       setLoading(false)

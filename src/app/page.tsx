@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { CheckCircle, XCircle, Loader2, Search } from 'lucide-react'
+import { CheckCircle, XCircle, Loader2, Search, RefreshCw } from 'lucide-react'
 
 interface Extension {
   id: string
@@ -32,7 +32,8 @@ export default function Dashboard() {
   const [filter, setFilter] = useState('')
   const [scanId, setScanId] = useState('')
   const [scanning, setScanning] = useState(false)
-  const [scanResult, setScanResult] = useState<{ success: boolean; message: string; name?: string; score?: number } | null>(null)
+  const [syncing, setSyncing] = useState(false)
+  const [scanResult, setScanResult] = useState<{ success: boolean; message: string; name?: string; score?: number; details?: string } | null>(null)
 
   useEffect(() => {
     const fetchExtensions = async () => {
@@ -99,6 +100,48 @@ export default function Dashboard() {
     }
   }
 
+  const handleSync = async () => {
+    setSyncing(true)
+    setScanResult(null)
+
+    try {
+      const res = await fetch('/api/sync', { method: 'POST' })
+      const data = await res.json()
+
+      if (res.ok) {
+        const details = []
+        if (data.removed > 0) details.push(`${data.removed} removed`)
+        if (data.added > 0) details.push(`${data.added} added`)
+        if (data.updated > 0) details.push(`${data.updated} updated`)
+
+        setScanResult({
+          success: true,
+          message: data.message,
+          details: details.length > 0 ? details.join(', ') : 'No changes needed',
+        })
+
+        const params = new URLSearchParams()
+        if (search) params.set('search', search)
+        if (filter) params.set('riskLevel', filter)
+        const refetch = await fetch(`/api/extensions?${params}`)
+        const refreshed = await refetch.json()
+        setExtensions(refreshed)
+      } else {
+        setScanResult({
+          success: false,
+          message: data.error || 'Sync failed',
+        })
+      }
+    } catch {
+      setScanResult({
+        success: false,
+        message: 'Network error. Please try again.',
+      })
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   const stats = {
     total: extensions.length,
     critical: extensions.filter(e => e.riskLevel === 'critical').length,
@@ -154,6 +197,11 @@ export default function Dashboard() {
                     {scanResult.name} — Risk Score: {scanResult.score}/100
                   </p>
                 )}
+                {scanResult.details && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    {scanResult.details}
+                  </p>
+                )}
               </div>
               <button
                 onClick={() => setScanResult(null)}
@@ -187,6 +235,23 @@ export default function Dashboard() {
             <option value="high">High Risk</option>
             <option value="critical">Critical Risk</option>
           </select>
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="bg-gray-800 hover:bg-gray-700 disabled:bg-gray-700 disabled:text-gray-500 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-gray-700"
+          >
+            {syncing ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Syncing...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4" />
+                Sync Local
+              </>
+            )}
+          </button>
           <div className="flex gap-2">
             <input
               type="text"

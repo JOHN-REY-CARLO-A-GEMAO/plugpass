@@ -198,3 +198,119 @@ export function getSensitivePermissions(permissions: string[]) {
     return SENSITIVE_PERMISSIONS.includes(key)
   })
 }
+
+export interface LocalExtension {
+  chromeId: string
+  name: string
+  version: string
+  description: string
+  developerName: string
+  manifest: any
+  allPermissions: string[]
+}
+
+export function calculateRiskFromManifest(manifest: any): { score: number; level: string } {
+  const perms = manifest.permissions || []
+  const hostPerms = manifest.host_permissions || []
+  let score = 0
+
+  const criticalPerms = ['cookies', 'webRequest', 'webRequestBlocking', 'proxy', 'debugger', 'nativeMessaging', 'management', 'privacy']
+  const highPerms = ['tabs', 'webNavigation', 'history', 'bookmarks', 'downloads', 'system', 'scripting', 'identity', 'clipboardRead']
+  const mediumPerms = ['storage', 'notifications', 'alarms', 'contextMenus', 'declarativeNetRequest']
+
+  const criticalCount = perms.filter(p => criticalPerms.includes(p)).length
+  const highCount = perms.filter(p => highPerms.includes(p)).length
+  const mediumCount = perms.filter(p => mediumPerms.includes(p)).length
+
+  score += criticalCount * 12
+  score += highCount * 7
+  score += mediumCount * 3
+
+  if (hostPerms.includes('<all_urls>')) {
+    score += 20
+  } else if (hostPerms.length > 3) {
+    score += 10
+  }
+
+  if (manifest.content_scripts && manifest.content_scripts.length > 0) {
+    score += 5
+  }
+
+  if (manifest.background) {
+    score += 3
+  }
+
+  score = Math.min(score, 100)
+
+  let level = 'low'
+  if (score >= 70) level = 'critical'
+  else if (score >= 50) level = 'high'
+  else if (score >= 25) level = 'medium'
+
+  return { score, level }
+}
+
+export async function scanLocalExtensions(): Promise<LocalExtension[] | null> {
+  try {
+    const fs = await import('fs')
+    const path = await import('path')
+    const os = await import('os')
+
+    const homeDir = os.homedir()
+    const chromePath = path.join(homeDir, 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'Default', 'Extensions')
+
+    if (!fs.existsSync(chromePath)) {
+      return null
+    }
+
+    const extensionDirs = fs.readdirSync(chromePath).filter(name => {
+      const fullPath = path.join(chromePath, name)
+      return fs.statSync(fullPath).isDirectory()
+    })
+
+    const results: LocalExtension[] = []
+
+    for (const chromeId of extensionDirs) {
+      const extDir = path.join(chromePath, chromeId)
+      const versionDirs = fs.readdirSync(extDir).filter(name => {
+        const fullPath = path.join(extDir, name)
+        return fs.statSync(fullPath).isDirectory()
+      })
+
+      if (versionDirs.length === 0) continue
+
+      const versionDir = path.join(extDir, versionDirs[0])
+      const manifestPath = path.join(versionDir, 'manifest.json')
+
+      if (!fs.existsSync(manifestPath)) continue
+
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
+
+      const name = resolveI18nValue(manifest, 'name')
+      const description = resolveI18nValue(manifest, 'description')
+      const version = manifest.version || 'unknown'
+      const developerName = typeof manifest.author === 'string'
+        ? manifest.author
+        : manifest.author?.email || manifest.author?.name || `Developer (${chromeId.substring(0, 8)}...)`
+
+      const allPermissions = [
+        ...(manifest.permissions || []),
+        ...(manifest.host_permissions || [])
+      ]
+
+      results.push({
+        chromeId,
+        name,
+        version,
+        description,
+        developerName,
+        manifest,
+        allPermissions,
+      })
+    }
+
+    return results
+  } catch {
+    return null
+  }
+}
