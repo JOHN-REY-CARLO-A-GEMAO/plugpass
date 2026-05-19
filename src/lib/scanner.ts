@@ -218,9 +218,9 @@ export function calculateRiskFromManifest(manifest: any): { score: number; level
   const highPerms = ['tabs', 'webNavigation', 'history', 'bookmarks', 'downloads', 'system', 'scripting', 'identity', 'clipboardRead']
   const mediumPerms = ['storage', 'notifications', 'alarms', 'contextMenus', 'declarativeNetRequest']
 
-  const criticalCount = perms.filter(p => criticalPerms.includes(p)).length
-  const highCount = perms.filter(p => highPerms.includes(p)).length
-  const mediumCount = perms.filter(p => mediumPerms.includes(p)).length
+  const criticalCount = perms.filter((p: string) => criticalPerms.includes(p)).length
+  const highCount = perms.filter((p: string) => highPerms.includes(p)).length
+  const mediumCount = perms.filter((p: string) => mediumPerms.includes(p)).length
 
   score += criticalCount * 12
   score += highCount * 7
