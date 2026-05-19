@@ -13,6 +13,8 @@
 
 ![Plugpass Demo](./public/screenshots/demo.gif)
 
+> **Live Demo:** Deploy to Vercel in one click — [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/JOHN-REY-CARLO-A-GEMAO/plugpass)
+
 ---
 
 ## Dashboard
