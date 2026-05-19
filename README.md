@@ -9,6 +9,12 @@
 
 ---
 
+## Demo
+
+![Plugpass Demo](./public/screenshots/demo.gif)
+
+---
+
 ## Dashboard
 
 ![Plugpass Dashboard](./public/screenshots/dashboard.png)
