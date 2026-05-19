@@ -1,11 +1,25 @@
 # Plugpass 🔒
 
-> **AI plugins have access to your passwords, emails, and browsing history. You can't tell which ones are safe. Plugpass fixes that.**
+> **Scans any Chrome extension in 3 seconds and tells you exactly what data it's stealing — with a risk score and actionable recommendations.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-7-2D3748)](https://www.prisma.io/)
+
+---
+
+## Dashboard
+
+![Plugpass Dashboard](/screenshots/dashboard.png)
+
+## Extension Detail with Recommendations
+
+![Extension Detail](/screenshots/detail.png)
+
+## Critical Risk Filter
+
+![Critical Extensions](/screenshots/critical.png)
 
 ---
 
@@ -15,7 +29,7 @@ Thousands of AI extensions now sit inside browsers with access to sensitive data
 
 A single rogue extension breach costs more than years of prevention.
 
-## How Plugpass Works
+## How It Works
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -50,7 +64,7 @@ A single rogue extension breach costs more than years of prevention.
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/YOUR_USERNAME/plugpass.git
+git clone https://github.com/JOHN-REY-CARLO-A-GEMAO/plugpass.git
 cd plugpass
 npm install
 
@@ -72,13 +86,13 @@ Here's what Plugpass found scanning real Chrome extensions:
 
 | Extension | Category | Risk Score | Key Finding |
 |---|---|---|---|
-| **vidIQ Vision for YouTube** | YouTube Analytics | **76/100** 🔴 | Requests `<all_urls>` but only works on YouTube |
-| **Malwarebytes Browser Guard** | Security | **92/100** 🔴 | 14 permissions — 64% more than expected for security |
-| **Urban VPN Proxy** | VPN | **91/100** 🔴 | Full network interception + all-site access |
 | **Free VPN - VeePN** | VPN | **100/100** 🔴 | Maximum possible risk — proxy + cookies + all URLs |
+| **Malwarebytes Browser Guard** | Security | **92/100** 🔴 | 14 permissions — 64% more than expected |
+| **Urban VPN Proxy** | VPN | **91/100** 🔴 | Full network interception + all-site access |
+| **vidIQ Vision for YouTube** | YouTube Analytics | **76/100** 🔴 | Requests `<all_urls>` but only works on YouTube |
 | **uBlock Origin Lite** | Ad Blocker | **36/100** 🟡 | High permissions justified for ad blocking |
-| **Google Docs Offline** | Productivity | **9/100** 🟢 | Minimal, expected permissions |
 | **WebSync for NotebookLM** | AI Notes | **13/100** 🟢 | Narrow host scope, few permissions |
+| **Google Docs Offline** | Productivity | **9/100** 🟢 | Minimal, expected permissions |
 
 ## Risk Score Breakdown
 
@@ -140,17 +154,19 @@ Plugpass doesn't just give you a number — it tells you **what to do about it**
 ```
 src/
 ├── app/                    # Next.js 16 App Router
-│   ├── page.tsx            # Dashboard with scan UI
+│   ├── page.tsx            # Dashboard with scan UI + sync button
 │   ├── extensions/[id]/    # Detail page with recommendations
 │   ├── developers/         # Developer trust registry
 │   └── api/                # REST API routes
 │       ├── extensions/     # List & detail endpoints
 │       ├── scan/           # CRX3 download & parse
+│       ├── sync/           # Sync local Chrome extensions
 │       └── developers/     # Registry endpoint
 │
 ├── lib/
 │   ├── scanner.ts          # Downloads .crx from Google's update API,
 │   │                       # strips CRX3 header, extracts manifest.json
+│   │                       # + scanLocalExtensions() for local import
 │   │
 │   ├── scorer.ts           # 4-component risk scoring engine:
 │   │                       #   Permission breadth (max 40)
@@ -170,7 +186,8 @@ src/
 │
 └── scripts/
     ├── seed.ts             # 8 demo extensions with real data
-    └── import-local.ts     # Scans YOUR Chrome extensions directory
+    ├── import-local.ts     # Scans YOUR Chrome extensions directory
+    └── screenshots.mjs     # Generates README screenshots
 ```
 
 ## Key Features
@@ -184,8 +201,8 @@ Classifies extensions into 13 categories (ad-blocker, VPN, YouTube analytics, AI
 ### 📊 Risk Scoring Engine
 Four-component scoring with transparent breakdown. Every point is traceable to a specific permission, developer signal, or policy gap.
 
-### 🔄 Local Extension Importer
-Reads your Chrome installation directory and imports every extension's real `manifest.json` — no network requests needed.
+### 🔄 Local Extension Sync
+One-click sync of your installed Chrome extensions. Automatically detects newly installed or removed extensions and updates the database.
 
 ### 🛡️ Developer Trust Registry
 Tracks developer identity signals (GitHub, LinkedIn, website) and assigns trust badges. Verified developers get lower risk scores.
@@ -198,6 +215,7 @@ Tracks developer identity signals (GitHub, LinkedIn, website) and assigns trust 
 - **Tailwind CSS** — Dark theme dashboard UI
 - **Cheerio** — HTML parsing (fallback)
 - **AdmZip** — CRX3/ZIP extraction
+- **Puppeteer** — Screenshot generation
 
 ## Available Scripts
 
