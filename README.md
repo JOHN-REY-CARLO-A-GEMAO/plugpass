@@ -11,15 +11,15 @@
 
 ## Dashboard
 
-![Plugpass Dashboard](/screenshots/dashboard.png)
+![Plugpass Dashboard](./public/screenshots/dashboard.png)
 
 ## Extension Detail with Recommendations
 
-![Extension Detail](/screenshots/detail.png)
+![Extension Detail](./public/screenshots/detail.png)
 
 ## Critical Risk Filter
 
-![Critical Extensions](/screenshots/critical.png)
+![Critical Extensions](./public/screenshots/critical.png)
 
 ---
 
