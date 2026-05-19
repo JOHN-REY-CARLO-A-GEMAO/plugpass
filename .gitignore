@@ -42,8 +42,10 @@ prisma/dev.db-journal
 prisma/migrations
 
 # generated
-src/generated
+# src/generated
 
 # OS
 Thumbs.db
 desktop.ini
+
+.vercel
