@@ -121,21 +121,33 @@ function resolveI18nValue(manifest: any, key: string, zip: AdmZip | null = null)
 
   const msgKey = raw.replace('__MSG_', '').replace('__', '')
   const locale = manifest.default_locale || 'en'
+  const localeOrder = [locale, 'en', 'en_US', 'en_GB']
 
   if (zip) {
-    const localeEntry = zip.getEntry(`_locales/${locale}/messages.json`)
-    if (localeEntry) {
-      try {
-        const messages = JSON.parse(localeEntry.getData().toString('utf8'))
-        if (messages[msgKey]?.message) return messages[msgKey].message
-      } catch {}
+    const entries = zip.getEntries()
+    const localeEntries = entries
+      .map(e => e.entryName)
+      .filter(name => name.startsWith('_locales/') && name.endsWith('messages.json'))
+
+    for (const loc of localeOrder) {
+      const targetPath = `_locales/${loc}/messages.json`
+      const match = localeEntries.find(e => e === targetPath)
+      if (match) {
+        const entry = zip.getEntry(match)
+        if (entry) {
+          try {
+            const messages = JSON.parse(entry.getData().toString('utf8'))
+            if (messages[msgKey]?.message) return messages[msgKey].message
+          } catch {}
+        }
+      }
     }
 
-    if (locale !== 'en') {
-      const enEntry = zip.getEntry('_locales/en/messages.json')
-      if (enEntry) {
+    for (const entryName of localeEntries) {
+      const entry = zip.getEntry(entryName)
+      if (entry) {
         try {
-          const messages = JSON.parse(enEntry.getData().toString('utf8'))
+          const messages = JSON.parse(entry.getData().toString('utf8'))
           if (messages[msgKey]?.message) return messages[msgKey].message
         } catch {}
       }
@@ -145,13 +157,46 @@ function resolveI18nValue(manifest: any, key: string, zip: AdmZip | null = null)
   return raw
 }
 
+async function fetchFromChromeWebStore(chromeId: string): Promise<{ name: string; description: string } | null> {
+  try {
+    const url = `https://chromewebstore.google.com/detail/${chromeId}`
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      },
+    })
+    if (!res.ok) return null
+
+    const html = await res.text()
+    const nameMatch = html.match(/<title>(.*?)\s*-\s*Chrome Web Store<\/title>/)
+    const descMatch = html.match(/<meta\s+name="description"\s+content="(.*?)"/)
+
+    return {
+      name: nameMatch ? nameMatch[1].trim() : '',
+      description: descMatch ? descMatch[1].trim() : '',
+    }
+  } catch {
+    return null
+  }
+}
+
 export async function scanExtension(chromeId: string): Promise<ScannedExtension | null> {
   try {
     const crxBuffer = await downloadCrx(chromeId)
     const { manifest, zip } = extractManifestFromCrx(crxBuffer)
 
-    const name = resolveI18nValue(manifest, 'name', zip)
-    const description = resolveI18nValue(manifest, 'description', zip)
+    let name = resolveI18nValue(manifest, 'name', zip)
+    let description = resolveI18nValue(manifest, 'description', zip)
+
+    if (name.startsWith('__MSG_') || description.startsWith('__MSG_')) {
+      console.log(`[Plugpass] i18n resolution failed for ${chromeId}, falling back to Chrome Web Store`)
+      const fallback = await fetchFromChromeWebStore(chromeId)
+      if (fallback) {
+        if (name.startsWith('__MSG_')) name = fallback.name
+        if (description.startsWith('__MSG_')) description = fallback.description
+      }
+    }
+
     const version = manifest.version || 'unknown'
     const developerName = typeof manifest.author === 'string'
       ? manifest.author
