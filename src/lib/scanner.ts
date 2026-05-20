@@ -81,7 +81,7 @@ async function downloadCrx(chromeId: string): Promise<Buffer> {
   return buffer
 }
 
-function extractManifestFromCrx(crxBuffer: Buffer): any {
+function extractManifestFromCrx(crxBuffer: Buffer): { manifest: any; zip: AdmZip } {
   const magic = crxBuffer.slice(0, 4).toString()
 
   if (magic !== 'Cr24') {
@@ -112,7 +112,7 @@ function extractManifestFromCrx(crxBuffer: Buffer): any {
   }
 
   const manifestJson = manifestEntry.getData().toString('utf8')
-  return JSON.parse(manifestJson)
+  return { manifest: JSON.parse(manifestJson), zip }
 }
 
 function resolveI18nValue(manifest: any, key: string, zip: AdmZip | null = null): string {
@@ -148,10 +148,10 @@ function resolveI18nValue(manifest: any, key: string, zip: AdmZip | null = null)
 export async function scanExtension(chromeId: string): Promise<ScannedExtension | null> {
   try {
     const crxBuffer = await downloadCrx(chromeId)
-    const manifest = extractManifestFromCrx(crxBuffer)
+    const { manifest, zip } = extractManifestFromCrx(crxBuffer)
 
-    const name = resolveI18nValue(manifest, 'name')
-    const description = resolveI18nValue(manifest, 'description')
+    const name = resolveI18nValue(manifest, 'name', zip)
+    const description = resolveI18nValue(manifest, 'description', zip)
     const version = manifest.version || 'unknown'
     const developerName = typeof manifest.author === 'string'
       ? manifest.author
