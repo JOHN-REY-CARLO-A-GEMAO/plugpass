@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npx prisma db push --schema prisma/schema.postgres.prisma --accept-data-loss && npx prisma generate --schema prisma/schema.postgres.prisma && next build",
+  "buildCommand": "npx prisma db push --accept-data-loss && npx prisma generate && next build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "outputDirectory": ".next"

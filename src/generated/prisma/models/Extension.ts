@@ -757,6 +757,7 @@ export type ExtensionCreateOrConnectWithoutDeveloperInput = {
 
 export type ExtensionCreateManyDeveloperInputEnvelope = {
   data: Prisma.ExtensionCreateManyDeveloperInput | Prisma.ExtensionCreateManyDeveloperInput[]
+  skipDuplicates?: boolean
 }
 
 export type ExtensionUpsertWithWhereUniqueWithoutDeveloperInput = {
@@ -2101,6 +2102,7 @@ export type ExtensionCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * The data used to create many Extensions.
    */
   data: Prisma.ExtensionCreateManyInput | Prisma.ExtensionCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -2119,6 +2121,7 @@ export type ExtensionCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Exten
    * The data used to create many Extensions.
    */
   data: Prisma.ExtensionCreateManyInput | Prisma.ExtensionCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

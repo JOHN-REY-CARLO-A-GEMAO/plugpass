@@ -474,6 +474,7 @@ export type AlternativeCreateOrConnectWithoutPrimaryInput = {
 
 export type AlternativeCreateManyPrimaryInputEnvelope = {
   data: Prisma.AlternativeCreateManyPrimaryInput | Prisma.AlternativeCreateManyPrimaryInput[]
+  skipDuplicates?: boolean
 }
 
 export type AlternativeCreateWithoutAlternativeInput = {
@@ -497,6 +498,7 @@ export type AlternativeCreateOrConnectWithoutAlternativeInput = {
 
 export type AlternativeCreateManyAlternativeInputEnvelope = {
   data: Prisma.AlternativeCreateManyAlternativeInput | Prisma.AlternativeCreateManyAlternativeInput[]
+  skipDuplicates?: boolean
 }
 
 export type AlternativeUpsertWithWhereUniqueWithoutPrimaryInput = {
@@ -1328,6 +1330,7 @@ export type AlternativeCreateManyArgs<ExtArgs extends runtime.Types.Extensions.I
    * The data used to create many Alternatives.
    */
   data: Prisma.AlternativeCreateManyInput | Prisma.AlternativeCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1346,6 +1349,7 @@ export type AlternativeCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Ext
    * The data used to create many Alternatives.
    */
   data: Prisma.AlternativeCreateManyInput | Prisma.AlternativeCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */
