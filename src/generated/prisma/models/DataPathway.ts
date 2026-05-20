@@ -496,7 +496,6 @@ export type DataPathwayCreateOrConnectWithoutExtensionInput = {
 
 export type DataPathwayCreateManyExtensionInputEnvelope = {
   data: Prisma.DataPathwayCreateManyExtensionInput | Prisma.DataPathwayCreateManyExtensionInput[]
-  skipDuplicates?: boolean
 }
 
 export type DataPathwayUpsertWithWhereUniqueWithoutExtensionInput = {
@@ -1309,7 +1308,6 @@ export type DataPathwayCreateManyArgs<ExtArgs extends runtime.Types.Extensions.I
    * The data used to create many DataPathways.
    */
   data: Prisma.DataPathwayCreateManyInput | Prisma.DataPathwayCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1328,7 +1326,6 @@ export type DataPathwayCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Ext
    * The data used to create many DataPathways.
    */
   data: Prisma.DataPathwayCreateManyInput | Prisma.DataPathwayCreateManyInput[]
-  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

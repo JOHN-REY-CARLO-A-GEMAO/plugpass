@@ -1,8 +1,4 @@
-import { PrismaClient } from '../src/generated/prisma'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
-
-const adapter = new PrismaBetterSqlite3({ url: 'file:D:/Downloads/new/plugpass/prisma/dev.db' })
-const prisma = new PrismaClient({ adapter })
+import { prisma } from '../src/lib/db'
 
 const AI_EXTENSIONS = [
   {

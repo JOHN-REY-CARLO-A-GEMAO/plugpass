@@ -1,11 +1,7 @@
-import { PrismaClient } from '../src/generated/prisma'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
+import { prisma } from '../src/lib/db'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
-
-const adapter = new PrismaBetterSqlite3({ url: 'file:D:/Downloads/new/plugpass/prisma/dev.db' })
-const prisma = new PrismaClient({ adapter })
 
 interface Manifest {
   name?: string

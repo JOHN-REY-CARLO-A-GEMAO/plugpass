@@ -37,14 +37,23 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchExtensions = async () => {
-      const params = new URLSearchParams()
-      if (search) params.set('search', search)
-      if (filter) params.set('riskLevel', filter)
+      try {
+        const params = new URLSearchParams()
+        if (search) params.set('search', search)
+        if (filter) params.set('riskLevel', filter)
 
-      const res = await fetch(`/api/extensions?${params}`)
-      const data = await res.json()
-      setExtensions(data)
-      setLoading(false)
+        const res = await fetch(`/api/extensions?${params}`)
+        if (!res.ok) {
+          console.error('Failed to fetch extensions:', res.status)
+          return
+        }
+        const data = await res.json()
+        setExtensions(data)
+      } catch (err) {
+        console.error('Error fetching extensions:', err)
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchExtensions()
@@ -84,10 +93,11 @@ export default function Dashboard() {
           message: data.error || 'Scan failed',
         })
       }
-    } catch (err) {
+    } catch (err: any) {
+      console.error('Scan error:', err)
       setScanResult({
         success: false,
-        message: 'Network error. Please try again.',
+        message: err?.message || 'Network error. Is the dev server running?',
       })
     } finally {
       setScanning(false)
@@ -132,10 +142,11 @@ export default function Dashboard() {
           message: data.error || 'Sync failed',
         })
       }
-    } catch {
+    } catch (err: any) {
+      console.error('Sync error:', err)
       setScanResult({
         success: false,
-        message: 'Network error. Please try again.',
+        message: err?.message || 'Network error. Is the dev server running?',
       })
     } finally {
       setSyncing(false)

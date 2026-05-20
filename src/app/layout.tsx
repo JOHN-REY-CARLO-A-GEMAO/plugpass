@@ -37,6 +37,7 @@ export default function RootLayout({
               </a>
               <nav className="flex items-center gap-6 text-sm">
                 <a href="/" className="text-gray-400 hover:text-white transition">Dashboard</a>
+                <a href="/audit" className="text-gray-400 hover:text-white transition">Audit</a>
                 <a href="/developers" className="text-gray-400 hover:text-white transition">Developers</a>
               </nav>
             </div>

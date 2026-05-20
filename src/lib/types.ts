@@ -56,6 +56,18 @@ export interface ExtensionDetail {
   riskFactors: string[]
 }
 
+export interface AuditSummary {
+  total: number
+  avgRiskScore: number
+  medianRiskScore: number
+  riskBreakdown: { low: number; medium: number; high: number; critical: number }
+  categoryBreakdown: { name: string; count: number; avgScore: number }[]
+  developerBreakdown: { name: string; count: number; avgScore: number; trustBadge: string }[]
+  criticalOutliers: { id: string; name: string; riskScore: number; riskLevel: string; permissionCount: number; developerName: string }[]
+  permissionStats: { total: number; avgPerExtension: number; mostCommon: { name: string; count: number }[] }
+  alternativeCoverage: number
+}
+
 export interface DeveloperSummary {
   id: string
   name: string

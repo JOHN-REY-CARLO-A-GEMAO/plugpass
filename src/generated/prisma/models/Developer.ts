@@ -1286,7 +1286,6 @@ export type DeveloperCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * The data used to create many Developers.
    */
   data: Prisma.DeveloperCreateManyInput | Prisma.DeveloperCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
@@ -1305,7 +1304,6 @@ export type DeveloperCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Exten
    * The data used to create many Developers.
    */
   data: Prisma.DeveloperCreateManyInput | Prisma.DeveloperCreateManyInput[]
-  skipDuplicates?: boolean
 }
 
 /**
