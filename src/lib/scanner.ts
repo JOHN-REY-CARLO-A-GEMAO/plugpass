@@ -115,7 +115,7 @@ function extractManifestFromCrx(crxBuffer: Buffer): { manifest: any; zip: AdmZip
   return { manifest: JSON.parse(manifestJson), zip }
 }
 
-function resolveI18nValue(manifest: any, key: string, zip: AdmZip | null = null): string {
+function resolveI18nValue(manifest: any, key: string, zip: AdmZip | null = null, chromeId?: string): string {
   const raw = manifest[key] || ''
   if (!raw.startsWith('__MSG_')) return raw
 
@@ -123,11 +123,15 @@ function resolveI18nValue(manifest: any, key: string, zip: AdmZip | null = null)
   const locale = manifest.default_locale || 'en'
   const localeOrder = [locale, 'en', 'en_US', 'en_GB']
 
+  console.log(`[Plugpass i18n] Looking for key "${msgKey}" in ${chromeId || 'unknown'}, default_locale="${locale}"`)
+
   if (zip) {
     const entries = zip.getEntries()
     const localeEntries = entries
       .map(e => e.entryName)
       .filter(name => name.startsWith('_locales/') && name.endsWith('messages.json'))
+
+    console.log(`[Plugpass i18n] Found locale files: ${localeEntries.join(', ')}`)
 
     for (const loc of localeOrder) {
       const targetPath = `_locales/${loc}/messages.json`
@@ -137,8 +141,15 @@ function resolveI18nValue(manifest: any, key: string, zip: AdmZip | null = null)
         if (entry) {
           try {
             const messages = JSON.parse(entry.getData().toString('utf8'))
-            if (messages[msgKey]?.message) return messages[msgKey].message
-          } catch {}
+            console.log(`[Plugpass i18n] Parsed ${targetPath}, keys: ${Object.keys(messages).slice(0, 10).join(', ')}...`)
+            if (messages[msgKey]) {
+              console.log(`[Plugpass i18n] Found ${msgKey}:`, JSON.stringify(messages[msgKey]))
+              if (messages[msgKey].message) return messages[msgKey].message
+              if (typeof messages[msgKey] === 'string') return messages[msgKey]
+            }
+          } catch (e) {
+            console.log(`[Plugpass i18n] Failed to parse ${targetPath}:`, e)
+          }
         }
       }
     }
@@ -148,12 +159,17 @@ function resolveI18nValue(manifest: any, key: string, zip: AdmZip | null = null)
       if (entry) {
         try {
           const messages = JSON.parse(entry.getData().toString('utf8'))
-          if (messages[msgKey]?.message) return messages[msgKey].message
+          if (messages[msgKey]) {
+            console.log(`[Plugpass i18n] Found ${msgKey} in ${entryName}:`, JSON.stringify(messages[msgKey]))
+            if (messages[msgKey].message) return messages[msgKey].message
+            if (typeof messages[msgKey] === 'string') return messages[msgKey]
+          }
         } catch {}
       }
     }
   }
 
+  console.log(`[Plugpass i18n] Could not resolve ${msgKey}, returning raw: ${raw}`)
   return raw
 }
 
@@ -162,20 +178,28 @@ async function fetchFromChromeWebStore(chromeId: string): Promise<{ name: string
     const url = `https://chromewebstore.google.com/detail/${chromeId}`
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'en-US,en;q=0.9',
       },
     })
     if (!res.ok) return null
 
     const html = await res.text()
-    const nameMatch = html.match(/<title>(.*?)\s*-\s*Chrome Web Store<\/title>/)
-    const descMatch = html.match(/<meta\s+name="description"\s+content="(.*?)"/)
 
-    return {
-      name: nameMatch ? nameMatch[1].trim() : '',
-      description: descMatch ? descMatch[1].trim() : '',
+    const nameMatch = html.match(/"name"\s*:\s*"([^"]+)"/) || html.match(/<title>(.*?)\s*-\s*Chrome Web Store<\/title>/)
+    const descMatch = html.match(/"description"\s*:\s*"([^"]+)"/) || html.match(/<meta\s+name="description"\s+content="(.*?)"/)
+
+    const name = nameMatch ? nameMatch[1].replace(/\\u003c/g, '<').replace(/\\u003e/g, '>').replace(/\\"/g, '"') : ''
+    const description = descMatch ? descMatch[1].replace(/\\u003c/g, '<').replace(/\\u003e/g, '>').replace(/\\"/g, '"') : ''
+
+    if (name || description) {
+      console.log(`[Plugpass] Chrome Web Store fallback for ${chromeId}: name="${name}", desc="${description.substring(0, 50)}..."`)
     }
-  } catch {
+
+    return { name, description }
+  } catch (err) {
+    console.log(`[Plugpass] Chrome Web Store fallback failed for ${chromeId}:`, err)
     return null
   }
 }
@@ -185,8 +209,8 @@ export async function scanExtension(chromeId: string): Promise<ScannedExtension 
     const crxBuffer = await downloadCrx(chromeId)
     const { manifest, zip } = extractManifestFromCrx(crxBuffer)
 
-    let name = resolveI18nValue(manifest, 'name', zip)
-    let description = resolveI18nValue(manifest, 'description', zip)
+    let name = resolveI18nValue(manifest, 'name', zip, chromeId)
+    let description = resolveI18nValue(manifest, 'description', zip, chromeId)
 
     if (name.startsWith('__MSG_') || description.startsWith('__MSG_')) {
       console.log(`[Plugpass] i18n resolution failed for ${chromeId}, falling back to Chrome Web Store`)
